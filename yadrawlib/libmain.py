@@ -1,5 +1,8 @@
 import logging
-from typing import Tuple
+import threading
+import time
+import attrs
+from typing import Tuple, List, Union
 
 import pygame
 
@@ -13,84 +16,137 @@ Area types:
 """
 
 
+def log_function(func):
+    def logged_function(*args, **kwargs):
+        logging.debug(f"{func.__name__} started")
+        result = func(*args, **kwargs)
+        logging.debug(f"{func.__name__} finished")
+        return result
+
+    return logged_function
+
+
+@attrs.define(kw_only=True)
 class YaDrawArea:
-    def __init__(self, width, height):
-        self.x0 = 0
-        self.y0 = 0
-        self.w = width
-        self.h = height
-        self.xc = 0
-        self.yc = 0
-        self.xs = 1
-        self.ys = 1
+    x0: int = attrs.field(init=True, default=0)  # Top left corner on the screen
+    y0: int = attrs.field(init=True, default=0)  # Top left corner on the screen
+    w: int = attrs.field(init=True, default=800)  # Width/Height
+    h: int = attrs.field(init=True, default=800)  # Width/Height
+    xc: int = attrs.field(init=True, default=0)  # Coord of zero-point on the surface
+    yc: int = attrs.field(init=True, default=0)  # Coord of zero-point on the surface
+    xs: float = attrs.field(init=True, default=1)  # Scale
+    ys: float = attrs.field(init=True, default=1)  # Scale
+    surface: pygame.Surface = attrs.field(init=False, default=None)
 
-    def get_area_parameters(self):
-        return self.x0, self.y0, self.w, self.h, self.xc, self.yc, self.xs, self.ys
+    @log_function
+    def __attrs_post_init__(self):
+        self.surface = pygame.Surface((self.w, self.h))
+
+    @log_function
+    def circle(self, center: Tuple[float, float], radius: float, color: Tuple[int, int, int] = (0, 0, 0)):
+        if self.xs != self.ys:
+            logging.error("Unimplemented: Circle: different x and y scales.")
+            return
+        pygame.draw.circle(self.surface,
+                           color=color,
+                           center=[self.xc + self.xs * center[0], self.yc + self.ys * center[1]],
+                           radius=self.xs * radius)
+
+    @log_function
+    def fill(self, color: Tuple[int, int, int] = (0, 0, 0)):
+        self.surface.fill(color)
 
 
-class YaDrawWindow:
+@attrs.define(kw_only=True)
+class YaDrawWindow(YaDrawArea):
     """
     Main YaDraw class. Represent a single window.
-    Only one window is supported for now.
+    Only one window is supported.
+
+    The usage:
+
+    # Create the window
+    window = yd.YaDrawWindow()
+
+    # Start new loop thread
+    loop_thread = threading.Thread(target=window.start_main_loop)
+    loop_thread.start()
+
+    # Draw and update
+    window.circle(center=(100, 100), radius=50, color=(0, 0, 255))
+    window.flip()
+
+    # Stop main loop
+    window.main_loop_running = False
+    loop_thread.join()
     """
-    def __init__(self, auto=True):
-        self.screen = None
-        self.areas = None
-        self.area_index = None
-        self.main_loop_running = None
-        self.init_completed = False
+    screen: pygame.Surface = attrs.field(init=False, default=None)  # Main screen handler
+    areas: List[YaDrawArea] = attrs.field(init=True, default=[])  # Areas list to automatically redraw
+    continue_running_main_loop: bool = attrs.field(init=True, default=False)
+    main_loop_thread: Union[threading.Thread, None] = attrs.field(init=True, default=None)
+    gui_initialized: bool = attrs.field(init=False, default=False)
 
-    def init(self):
-        pygame.init()
-        self.screen = pygame.display.set_mode([800, 800])
-        self.areas = [YaDrawArea(self.screen.get_width(), self.screen.get_height())]
-        self.area_index = 0
-        self.main_loop_running = True
-        self.init_completed = True
+    @log_function
+    def __attrs_post_init__(self):
+        super(YaDrawWindow, self).__attrs_post_init__()
+        self._start_main_loop()
 
+    @log_function
     def __del__(self):
+        if self.main_loop_thread is not None:
+            self.main_loop_thread.join()
+            self.main_loop_thread = None
+            logging.info('Forcefully joined gui thread')
         pygame.quit()
 
-    def _get_selected_area_parameters(self):
-        return self.areas[self.area_index].get_area_parameters()
+    """ Public methods """
 
-    def select_area(self, area_index):
-        if area_index < 0 or area_index >= len(self.areas):
-            logging.error(f"Cannot select area {area_index}")
-            return self
-        self.area_index = area_index
-        return self
-
-    def circle(self, center: Tuple[float, float], radius: float, color: Tuple[int, int, int] = (0, 0, 0)):
-        x0, y0, w, h, xc, yc, xs, ys = self._get_selected_area_parameters()
-        if xs != ys:
-            logging.warning("Circle: different x and y scales. Using x scale.")
-            ys = xs
-        pygame.draw.circle(self.screen,
-                           color=color,
-                           center=[x0 + xc + xs * center[0], y0 + yc + ys * center[1]],
-                           radius=xs * radius)
-
-    def fill(self, color: Tuple[int, int, int] = (0, 0, 0)):
-        self.screen.fill(color)
-
-    @staticmethod
-    def flip():
+    @log_function
+    def update(self):
+        self.screen.blit(self.surface, (self.x0, self.y0))
+        for area in self.areas:
+            self.screen.blit(area.surface, (area.x0, area.y0))
         pygame.display.flip()
 
-    def start_main_loop(self):
-        logging.warning("Starting init")
-        self.init()
+    @log_function
+    def close(self):
+        self._stop_main_loop()
 
-        logging.warning("Starting main loop")
-        self.main_loop_running = True
-        while self.main_loop_running:
+    """ Private methods """
+
+    @log_function
+    def _start_main_loop(self):
+        self.main_loop_thread = threading.Thread(target=self._main_loop)
+        self.gui_initialized = False
+        self.continue_running_main_loop = True
+        self.main_loop_thread.start()
+        logging.info('Started gui thread')
+        logging.debug('Main thread: waiting for gui to initialize')
+        while not self.gui_initialized:
+            pass
+        logging.debug('Main thread: continue')
+
+    @log_function
+    def _stop_main_loop(self):
+        self.continue_running_main_loop = False
+        self.main_loop_thread.join()
+        self.main_loop_thread = None
+        logging.info('Joined gui thread')
+
+    """ In-thread methods """
+    @log_function
+    def init(self):
+        pygame.init()
+        self.screen = pygame.display.set_mode([self.w, self.h])
+        self.gui_initialized = True
+
+    @log_function
+    def _main_loop(self):
+        self.init()
+        while self.continue_running_main_loop:
             for event in pygame.event.get():
                 if event.type == pygame.MOUSEBUTTONUP:
-                    logging.warning("pygame.MOUSEBUTTONUP message received.")
+                    logging.info("pygame.MOUSEBUTTONUP message received.")
                 if event.type == pygame.QUIT:
-                    logging.warning("pygame.QUIT message received.")
-                    self.main_loop_running = False
-
-        logging.warning("Exiting main loop")
-        # self.screen = pygame.display.set_mode(self.screen.get_size(), flags=pygame.HIDDEN)
+                    logging.info("pygame.QUIT message received.")
+                    self.continue_running_main_loop = False
