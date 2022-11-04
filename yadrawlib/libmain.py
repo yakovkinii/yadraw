@@ -1,6 +1,5 @@
 import logging
 import threading
-import time
 import attrs
 from typing import Tuple, List, Union
 
@@ -53,8 +52,33 @@ class YaDrawArea:
                            radius=self.xs * radius)
 
     @log_function
+    def rect(self, rect: Tuple[float, float, float, float], width: int = 0, color: Tuple[int, int, int] = (0, 0, 0)):
+        """ width=0 -> solid fill; width!=0 -> only border """
+        pygame.draw.rect(self.surface, color=color, rect=pygame.Rect(rect), width=width)
+
+    @log_function
     def fill(self, color: Tuple[int, int, int] = (0, 0, 0)):
         self.surface.fill(color)
+
+    @log_function
+    def on_event(self, event: pygame.event):
+        ...
+
+
+@attrs.define(kw_only=True)
+class YaDrawAreaCatalogEntry:
+    area: YaDrawArea = attrs.field(init=True)
+    messages_to_intercept: Tuple[int] = attrs.field(init=True, default=[])
+
+    def is_screen_coord_in_area(self, x, y):
+        left = self.area.x0
+        right = self.area.x0 + self.area.w
+        top = self.area.y0
+        bottom = self.area.y0 + self.area.h
+
+        if left <= x <= right and top <= y <= bottom:
+            return True
+        return False
 
 
 @attrs.define(kw_only=True)
@@ -81,7 +105,7 @@ class YaDrawWindow(YaDrawArea):
     loop_thread.join()
     """
     screen: pygame.Surface = attrs.field(init=False, default=None)  # Main screen handler
-    areas: List[YaDrawArea] = attrs.field(init=True, default=[])  # Areas list to automatically redraw
+    areas: List[YaDrawAreaCatalogEntry] = attrs.field(init=True, default=[])
     continue_running_main_loop: bool = attrs.field(init=True, default=False)
     main_loop_thread: Union[threading.Thread, None] = attrs.field(init=True, default=None)
     gui_initialized: bool = attrs.field(init=False, default=False)
@@ -112,7 +136,20 @@ class YaDrawWindow(YaDrawArea):
     def close(self):
         self._stop_main_loop()
 
-    """ Private methods """
+    @log_function
+    def wait_until_exit(self):
+        logging.info('Main thread awaiting gui exit')
+        self._await_main_loop()
+
+    @log_function
+    def on_event(self, event: pygame.event):
+        if event.type == pygame.MOUSEBUTTONUP:
+            logging.info("pygame.MOUSEBUTTONUP message received.")
+        if event.type == pygame.QUIT:
+            logging.info("pygame.QUIT message received.")
+            self.continue_running_main_loop = False
+
+    """ Protected methods """
 
     @log_function
     def _start_main_loop(self):
@@ -127,13 +164,18 @@ class YaDrawWindow(YaDrawArea):
         logging.debug('Main thread: continue')
 
     @log_function
-    def _stop_main_loop(self):
-        self.continue_running_main_loop = False
+    def _await_main_loop(self):
         self.main_loop_thread.join()
         self.main_loop_thread = None
         logging.info('Joined gui thread')
 
+    @log_function
+    def _stop_main_loop(self):
+        self.continue_running_main_loop = False
+        self._await_main_loop()
+
     """ In-thread methods """
+
     @log_function
     def init(self):
         pygame.init()
@@ -145,8 +187,4 @@ class YaDrawWindow(YaDrawArea):
         self.init()
         while self.continue_running_main_loop:
             for event in pygame.event.get():
-                if event.type == pygame.MOUSEBUTTONUP:
-                    logging.info("pygame.MOUSEBUTTONUP message received.")
-                if event.type == pygame.QUIT:
-                    logging.info("pygame.QUIT message received.")
-                    self.continue_running_main_loop = False
+                self.on_event(event)

@@ -13,7 +13,7 @@ window.fill((100, 100, 200))
 window.circle(center=(200, 200), radius=100, color=(255, 0, 255))
 window.update()
 
-time.sleep(5)
+time.sleep(10)
 
-# close window
+# terminate gui
 window.close()
