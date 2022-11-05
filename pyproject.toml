@@ -4,13 +4,18 @@ build-backend = "hatchling.build"
 
 [project]
 name = "yadraw"
-version = "0.0.3"
+version = "0.0.4"
 authors = [
-  { name="Ivan I. Yakovkin", email="yakovkinii@gmail.com" },
+    { name = "Ivan I. Yakovkin", email = "yakovkinii@gmail.com" },
 ]
 description = "Graphical library over pygame"
 readme = "README.md"
 requires-python = ">=3.7"
+dependencies = [
+    'attrs',
+    'pygame',
+    'coloredlogs',
+]
 classifiers = [
     "Programming Language :: Python :: 3",
     "License :: OSI Approved :: MIT License",
