@@ -95,10 +95,10 @@ class YaDrawWindow(YaDrawArea):
     @log_function
     def __del__(self):
         if self.main_loop_thread is not None:
+            logging.error('Forcefully joining gui thread')
             self.main_loop_thread.join()
             self.main_loop_thread = None
             logging.info('Forcefully joined gui thread')
-        pygame.quit()
 
     """ Any thread public methods """
 
@@ -156,7 +156,7 @@ class YaDrawWindow(YaDrawArea):
     @log_function
     def on_event(self, event: pygame.event):
         if event.type == pygame.QUIT:
-            logging.info("pygame.QUIT message received.")
+            logging.info("pygame.QUIT message received")
             self.continue_running_main_loop = False
 
     """ GUI thread protected methods """
@@ -178,3 +178,4 @@ class YaDrawWindow(YaDrawArea):
                 self.invoke_redraws_for_all_areas()
                 self.update()
                 last_update_time = time.time()
+        pygame.quit()
