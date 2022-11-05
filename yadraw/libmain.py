@@ -7,24 +7,7 @@ from typing import Tuple, List, Union
 
 import pygame
 
-"""
-Window is a unique singular parent for all graphics.
-Window can have multiple areas. In order to draw to a certain area you need to select it.
-Area types:
-    1. None (default) - draw directly to the window, no scaling.
-    2. Fixed - no scaling, but has offset and borders.
-    3. Scaled - has scaling, offset and borders.
-"""
-
-
-def log_function(func):
-    def logged_function(*args, **kwargs):
-        logging.debug(f"{func.__name__} started")
-        result = func(*args, **kwargs)
-        logging.debug(f"{func.__name__} finished")
-        return result
-
-    return logged_function
+from misc.logging_config import log_function
 
 
 @attrs.define(kw_only=True)
@@ -118,6 +101,7 @@ class YaDrawWindow(YaDrawArea):
         pygame.quit()
 
     """ Any thread public methods """
+
     @log_function
     def invoke_redraws_for_all_areas(self):
         self.on_redraw()
@@ -190,7 +174,7 @@ class YaDrawWindow(YaDrawArea):
         while self.continue_running_main_loop:
             for event in pygame.event.get():
                 self.on_event(event)
-            if self.auto_update_s is not None and time.time() > last_update_time+self.auto_update_s:
+            if self.auto_update_s is not None and time.time() > last_update_time + self.auto_update_s:
                 self.invoke_redraws_for_all_areas()
                 self.update()
                 last_update_time = time.time()

@@ -3,6 +3,16 @@ import logging
 import coloredlogs
 
 
+def log_function(func):
+    def logged_function(*args, **kwargs):
+        logging.debug(f"{func.__name__} started")
+        result = func(*args, **kwargs)
+        logging.debug(f"{func.__name__} finished")
+        return result
+
+    return logged_function
+
+
 def init(level=logging.INFO):
     coloredlogs.DEFAULT_FIELD_STYLES = dict(
         asctime=dict(color='white'),
