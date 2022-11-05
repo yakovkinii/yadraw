@@ -7,11 +7,11 @@ from typing import Tuple, List, Union
 
 import pygame
 
-from misc.logging_config import log_function
+from src.yadraw_yakovkinii.logging_config import log_function
 
 
 @attrs.define(kw_only=True)
-class YaDrawArea:
+class Area:
     x0: int = attrs.field(init=True, default=0)  # Top left corner on the screen
     y0: int = attrs.field(init=True, default=0)  # Top left corner on the screen
     w: int = attrs.field(init=True, default=800)  # Width/Height
@@ -38,10 +38,10 @@ class YaDrawArea:
                            center=[self.xc + self.xs * center[0], self.yc + self.ys * center[1]],
                            radius=self.xs * radius)
 
-    @log_function
-    def rect(self, rect: Tuple[float, float, float, float], width: int = 0, color: Tuple[int, int, int] = (0, 0, 0)):
-        """ width=0 -> solid fill; width!=0 -> only border """
-        pygame.draw.rect(self.surface, color=color, rect=pygame.Rect(rect), width=width)
+    # @log_function
+    # def rect(self, rect: Tuple[float, float, float, float], width: int = 0, color: Tuple[int, int, int] = (0, 0, 0)):
+    #     """ width=0 -> solid fill; width!=0 -> only border """
+    #     pygame.draw.rect(self.surface, color=color, rect=pygame.Rect(rect), width=width)
 
     @log_function
     def fill(self, color: Tuple[int, int, int] = (0, 0, 0)):
@@ -59,8 +59,8 @@ class YaDrawArea:
 
 
 @attrs.define(kw_only=True)
-class YaDrawAreaCatalogEntry:
-    area: YaDrawArea = attrs.field(init=True)
+class AreaCatalogEntry:
+    area: Area = attrs.field(init=True)
     messages_to_intercept: Tuple[int] = attrs.field(init=True, default=[])
 
     def is_screen_coord_in_area(self, x, y):
@@ -75,13 +75,13 @@ class YaDrawAreaCatalogEntry:
 
 
 @attrs.define(kw_only=True)
-class YaDrawWindow(YaDrawArea):
+class Window(Area):
     """
     Main YaDraw class. Represents a single window.
     Only one window is supported.
     """
     screen: pygame.Surface = attrs.field(init=False, default=None)  # Main screen handler
-    areas: List[YaDrawAreaCatalogEntry] = attrs.field(init=True, default=[])
+    areas: List[AreaCatalogEntry] = attrs.field(init=True, default=[])
     continue_running_main_loop: bool = attrs.field(init=False, default=False)
     main_loop_thread: Union[threading.Thread, None] = attrs.field(init=False, default=None)
     auto_update_s: float = attrs.field(init=True, default=None)
@@ -89,7 +89,7 @@ class YaDrawWindow(YaDrawArea):
 
     @log_function
     def __attrs_post_init__(self):
-        super(YaDrawWindow, self).__attrs_post_init__()
+        super(Window, self).__attrs_post_init__()
         self._start_main_loop()
 
     @log_function
