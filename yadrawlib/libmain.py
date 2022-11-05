@@ -43,6 +43,8 @@ class YaDrawArea:
     def __attrs_post_init__(self):
         self.surface = pygame.Surface((self.w, self.h))
 
+    """ Any thread public methods """
+
     @log_function
     def circle(self, center: Tuple[float, float], radius: float, color: Tuple[int, int, int] = (0, 0, 0)):
         if self.xs != self.ys:
@@ -61,6 +63,8 @@ class YaDrawArea:
     @log_function
     def fill(self, color: Tuple[int, int, int] = (0, 0, 0)):
         self.surface.fill(color)
+
+    """ GUI thread public methods """
 
     @log_function
     def on_event(self, event: pygame.event):
@@ -126,7 +130,7 @@ class YaDrawWindow(YaDrawArea):
             logging.info('Forcefully joined gui thread')
         pygame.quit()
 
-    """ Public methods """
+    """ Any thread public methods """
 
     @log_function
     def update(self):
@@ -134,6 +138,8 @@ class YaDrawWindow(YaDrawArea):
         for area in self.areas:
             self.screen.blit(area.surface, (area.x0, area.y0))
         pygame.display.flip()
+
+    """ Main thread public methods """
 
     @log_function
     def close(self):
@@ -144,15 +150,7 @@ class YaDrawWindow(YaDrawArea):
         logging.info('Main thread awaiting gui exit')
         self._await_main_loop()
 
-    @log_function
-    def on_event(self, event: pygame.event):
-        if event.type == pygame.MOUSEBUTTONUP:
-            logging.info("pygame.MOUSEBUTTONUP message received.")
-        if event.type == pygame.QUIT:
-            logging.info("pygame.QUIT message received.")
-            self.continue_running_main_loop = False
-
-    """ Protected methods """
+    """ Main thread protected methods """
 
     @log_function
     def _start_main_loop(self):
@@ -177,17 +175,27 @@ class YaDrawWindow(YaDrawArea):
         self.continue_running_main_loop = False
         self._await_main_loop()
 
-    """ In-thread methods """
+    """ GUI thread public methods """
 
     @log_function
-    def init(self):
+    def on_event(self, event: pygame.event):
+        if event.type == pygame.MOUSEBUTTONUP:
+            logging.info("pygame.MOUSEBUTTONUP message received.")
+        if event.type == pygame.QUIT:
+            logging.info("pygame.QUIT message received.")
+            self.continue_running_main_loop = False
+
+    """ GUI thread protected methods """
+
+    @log_function
+    def _init(self):
         pygame.init()
         self.screen = pygame.display.set_mode([self.w, self.h])
         self.gui_initialized = True
 
     @log_function
     def _main_loop(self):
-        self.init()
+        self._init()
         last_update_time = time.time()
         while self.continue_running_main_loop:
             for event in pygame.event.get():
