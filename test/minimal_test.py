@@ -1,9 +1,9 @@
-from misc import logging_init
+from misc import logging_config
 import time
 import yadrawlib.libmain as yd
 
 
-logging_init.init()
+logging_config.init()
 
 # init window
 window = yd.YaDrawWindow()

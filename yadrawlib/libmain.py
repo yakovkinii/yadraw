@@ -1,5 +1,7 @@
 import logging
 import threading
+import time
+
 import attrs
 from typing import Tuple, List, Union
 
@@ -106,8 +108,9 @@ class YaDrawWindow(YaDrawArea):
     """
     screen: pygame.Surface = attrs.field(init=False, default=None)  # Main screen handler
     areas: List[YaDrawAreaCatalogEntry] = attrs.field(init=True, default=[])
-    continue_running_main_loop: bool = attrs.field(init=True, default=False)
-    main_loop_thread: Union[threading.Thread, None] = attrs.field(init=True, default=None)
+    continue_running_main_loop: bool = attrs.field(init=False, default=False)
+    main_loop_thread: Union[threading.Thread, None] = attrs.field(init=False, default=None)
+    auto_update_s: float = attrs.field(init=True, default=None)
     gui_initialized: bool = attrs.field(init=False, default=False)
 
     @log_function
@@ -185,6 +188,10 @@ class YaDrawWindow(YaDrawArea):
     @log_function
     def _main_loop(self):
         self.init()
+        last_update_time = time.time()
         while self.continue_running_main_loop:
             for event in pygame.event.get():
                 self.on_event(event)
+            if self.auto_update_s is not None and time.time() > last_update_time+self.auto_update_s:
+                self.update()
+                last_update_time = time.time()

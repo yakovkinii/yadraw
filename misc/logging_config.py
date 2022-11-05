@@ -3,7 +3,7 @@ import logging
 import coloredlogs
 
 
-def init():
+def init(level=logging.DEBUG):
     coloredlogs.DEFAULT_FIELD_STYLES = dict(
         asctime=dict(color='white'),
         hostname=dict(color='magenta'),
@@ -26,7 +26,7 @@ def init():
         error=dict(color='red'),
         critical=dict(color='red', bold=True),
     )
-    coloredlogs.DEFAULT_LOG_LEVEL = logging.DEBUG
+    coloredlogs.DEFAULT_LOG_LEVEL = level
     coloredlogs.DEFAULT_LOG_FORMAT = '%(asctime)s %(levelname).4s %(filename)s:%(lineno)d %(message)s'
     coloredlogs.DEFAULT_DATE_FORMAT = '%H:%M:%S'
     coloredlogs.install()
