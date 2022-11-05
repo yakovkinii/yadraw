@@ -1,31 +1,34 @@
-import logging
+"""
+Async redraw handler test for YaDraw.
+The GUI will draw the latest results at its own pace, not limiting the calculation speed to the screen update speed.
+"""
 
-import pygame
+import time
 
 from misc import logging_config
-import yadrawlib.libmain as yd
+import yadraw.libmain as yd
 
 
-def custom_on_event(self, event: pygame.event):
-    if event.type == pygame.MOUSEBUTTONUP:
-        logging.info("Pressure! Pushing down on me")
-    if event.type == pygame.QUIT:
-        logging.warning("Aha-hah no quitting for you")
-    if event.type == pygame.KEYUP:
-        logging.warning("You trik me I giv up")
-        self.continue_running_main_loop = False
+def custom_on_redraw(self: yd.YaDrawWindow):
+    self.fill((200, 200, 200))
+    for point in list_of_points_to_draw:
+        self.circle(center=point, radius=4, color=(0,0,255))
 
 
+# Init fancy logger (unrelated to YaDraw)
 logging_config.init()
 
-# Monkey-patch the event handler for YaDrawWindow (since only 1 instance allowed anyway)
-yd.YaDrawWindow.on_event = custom_on_event
+# Monkey-patch redraw handler for YaDrawWindow (since only 1 instance allowed anyway)
+yd.YaDrawWindow.on_redraw = custom_on_redraw
 
-# init window
-window = yd.YaDrawWindow(auto_update_s=0.1)
+# Init window, set automatic update to 1 second interval
+window = yd.YaDrawWindow(auto_update_s=1)  # 1 fps
 
-# Draw something
-window.fill((100, 100, 200))
-window.circle(center=(200, 200), radius=100, color=(255, 0, 255))
+# Start the "calculation" of the points to draw
+list_of_points_to_draw = []
+for i in range(100):
+    list_of_points_to_draw.append((i*8, i*8))
+    time.sleep(0.2)  # around 5 dots per frame
 
+# Await GUI exit
 window.wait_until_exit()

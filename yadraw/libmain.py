@@ -70,6 +70,10 @@ class YaDrawArea:
     def on_event(self, event: pygame.event):
         ...
 
+    @log_function
+    def on_redraw(self):
+        ...
+
 
 @attrs.define(kw_only=True)
 class YaDrawAreaCatalogEntry:
@@ -90,25 +94,8 @@ class YaDrawAreaCatalogEntry:
 @attrs.define(kw_only=True)
 class YaDrawWindow(YaDrawArea):
     """
-    Main YaDraw class. Represent a single window.
+    Main YaDraw class. Represents a single window.
     Only one window is supported.
-
-    The usage:
-
-    # Create the window
-    window = yd.YaDrawWindow()
-
-    # Start new loop thread
-    loop_thread = threading.Thread(target=window.start_main_loop)
-    loop_thread.start()
-
-    # Draw and update
-    window.circle(center=(100, 100), radius=50, color=(0, 0, 255))
-    window.flip()
-
-    # Stop main loop
-    window.main_loop_running = False
-    loop_thread.join()
     """
     screen: pygame.Surface = attrs.field(init=False, default=None)  # Main screen handler
     areas: List[YaDrawAreaCatalogEntry] = attrs.field(init=True, default=[])
@@ -131,6 +118,11 @@ class YaDrawWindow(YaDrawArea):
         pygame.quit()
 
     """ Any thread public methods """
+    @log_function
+    def invoke_redraws_for_all_areas(self):
+        self.on_redraw()
+        for area in self.areas:
+            area.on_redraw()
 
     @log_function
     def update(self):
@@ -179,8 +171,6 @@ class YaDrawWindow(YaDrawArea):
 
     @log_function
     def on_event(self, event: pygame.event):
-        if event.type == pygame.MOUSEBUTTONUP:
-            logging.info("pygame.MOUSEBUTTONUP message received.")
         if event.type == pygame.QUIT:
             logging.info("pygame.QUIT message received.")
             self.continue_running_main_loop = False
@@ -201,5 +191,6 @@ class YaDrawWindow(YaDrawArea):
             for event in pygame.event.get():
                 self.on_event(event)
             if self.auto_update_s is not None and time.time() > last_update_time+self.auto_update_s:
+                self.invoke_redraws_for_all_areas()
                 self.update()
                 last_update_time = time.time()
