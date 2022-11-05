@@ -6,8 +6,8 @@ The GUI will draw the latest results at its own pace, not limiting the calculati
 import time
 import unittest
 
-from src.yadraw_yakovkinii import logging_config
-import src as yd
+from src.yadraw import logging_config
+import src.yadraw.yadraw as yd
 
 logging_config.init()
 
