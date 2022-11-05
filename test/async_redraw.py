@@ -26,7 +26,7 @@ def async_redraw_test():
     list_of_points_to_draw = []
     for i in range(100):
         list_of_points_to_draw.append((i * 8, i * 8))
-        time.sleep(0.2)  # around 5 dots per frame
+        time.sleep(0.1)  # around 10 dots per frame
 
     # Await GUI exit
     window.wait_until_exit()
