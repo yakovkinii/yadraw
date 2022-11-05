@@ -3,7 +3,7 @@ import logging
 import coloredlogs
 
 
-def init(level=logging.DEBUG):
+def init(level=logging.INFO):
     coloredlogs.DEFAULT_FIELD_STYLES = dict(
         asctime=dict(color='white'),
         hostname=dict(color='magenta'),
@@ -23,7 +23,7 @@ def init(level=logging.DEBUG):
         notice=dict(color='magenta', bold=True),
         warning=dict(color='yellow', bold=True),
         success=dict(color='green', bold=True),
-        error=dict(color='red'),
+        error=dict(color='red', bold=True),
         critical=dict(color='red', bold=True),
     )
     coloredlogs.DEFAULT_LOG_LEVEL = level

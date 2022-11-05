@@ -12,11 +12,11 @@ def custom_on_event(self, event: pygame.event):
     if event.type == pygame.QUIT:
         logging.warning("Aha-hah no quitting for you")
     if event.type == pygame.KEYUP:
-        logging.info("You trik me I giv up")
+        logging.warning("You trik me I giv up")
         self.continue_running_main_loop = False
 
 
-logging_config.init(level=logging.INFO)
+logging_config.init()
 
 # Monkey-patch the event handler for YaDrawWindow (since only 1 instance allowed anyway)
 yd.YaDrawWindow.on_event = custom_on_event
