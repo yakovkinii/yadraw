@@ -11,7 +11,7 @@ import yadraw.libmain as yd
 
 
 def event_handler_test():
-    # Create a substitute for event handler
+    # Create a custom event handler
     def custom_on_event(self, event: pygame.event):
         if event.type == pygame.MOUSEBUTTONUP:
             logging.info("Pressure! Pushing down on me")

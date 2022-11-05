@@ -10,12 +10,13 @@ import yadraw.libmain as yd
 
 
 def async_redraw_test():
+    # Create a custom on_redraw handler
     def custom_on_redraw(self: yd.YaDrawWindow):
         self.fill((200, 200, 200))
         for point in list_of_points_to_draw:
             self.circle(center=point, radius=4, color=(0, 0, 255))
 
-    # Monkey-patch the redraw event handler for YaDrawWindow class
+    # Monkey-patch the on_redraw handler for YaDrawWindow class
     yd.YaDrawWindow.on_redraw = custom_on_redraw
 
     # Create a window, set automatic update to 1 second interval
