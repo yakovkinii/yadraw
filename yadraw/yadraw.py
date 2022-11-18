@@ -3,8 +3,9 @@ import threading
 import time
 
 import attrs
-from typing import Tuple, List, Union
+from typing import Tuple, Union, Dict
 
+import numpy as np
 import pygame
 from yatools.logging_config import log_function
 
@@ -28,14 +29,12 @@ class Area:
     """ Any thread public methods """
 
     @log_function
-    def circle(self, center: Tuple[float, float], radius: float, color: Tuple[int, int, int] = (0, 0, 0)):
-        if self.xs != self.ys:
-            logging.error("Unimplemented: Circle: different x and y scales.")
-            return
+    def circle(self, center: Union[Tuple[float, float], np.ndarray], radius: float,
+               color: Tuple[int, int, int] = (0, 0, 0)):
         pygame.draw.circle(self.surface,
                            color=color,
                            center=[self.xc + self.xs * center[0], self.yc + self.ys * center[1]],
-                           radius=self.xs * radius)
+                           radius=radius)
 
     # @log_function
     # def rect(self, rect: Tuple[float, float, float, float], width: int = 0, color: Tuple[int, int, int] = (0, 0, 0)):
@@ -58,29 +57,13 @@ class Area:
 
 
 @attrs.define(kw_only=True)
-class AreaCatalogEntry:
-    area: Area = attrs.field(init=True)
-    messages_to_intercept: Tuple[int] = attrs.field(init=True, default=[])
-
-    def is_screen_coord_in_area(self, x, y):
-        left = self.area.x0
-        right = self.area.x0 + self.area.w
-        top = self.area.y0
-        bottom = self.area.y0 + self.area.h
-
-        if left <= x <= right and top <= y <= bottom:
-            return True
-        return False
-
-
-@attrs.define(kw_only=True)
 class Window(Area):
     """
     Main YaDraw class. Represents a single window.
     Only one window is supported.
     """
     screen: pygame.Surface = attrs.field(init=False, default=None)  # Main screen handler
-    areas: List[AreaCatalogEntry] = attrs.field(init=True, default=[])
+    areas: Dict[str: Area] = attrs.field(init=True, default={})
     continue_running_main_loop: bool = attrs.field(init=False, default=False)
     main_loop_thread: Union[threading.Thread, None] = attrs.field(init=False, default=None)
     auto_update_s: float = attrs.field(init=True, default=None)
@@ -102,15 +85,23 @@ class Window(Area):
     """ Any thread public methods """
 
     @log_function
+    def add_area(self, name, x0, y0, w, h, xc, yc, xs, ys):
+        if name in self.areas.keys():
+            logging.error(f"Cannot add area: area with the name '{name}' already exists")
+        else:
+            self.areas.append({name: Area(x0, y0, w, h, xc, yc, xs, ys)})
+
+    @log_function
     def invoke_redraws_for_all_areas(self):
         self.on_redraw()
-        for area in self.areas:
+        for name, area in self.areas.values():
             area.on_redraw()
 
     @log_function
     def update(self):
+        self.invoke_redraws_for_all_areas()
         self.screen.blit(self.surface, (self.x0, self.y0))
-        for area in self.areas:
+        for name, area in self.areas.values():
             self.screen.blit(area.surface, (area.x0, area.y0))
         pygame.display.flip()
 
