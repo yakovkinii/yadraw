@@ -89,19 +89,19 @@ class Window(Area):
         if name in self.areas.keys():
             logging.error(f"Cannot add area: area with the name '{name}' already exists")
         else:
-            self.areas.append({name: Area(x0, y0, w, h, xc, yc, xs, ys)})
+            self.areas[name] = Area(x0, y0, w, h, xc, yc, xs, ys)
 
     @log_function
     def invoke_redraws_for_all_areas(self):
         self.on_redraw()
-        for name, area in self.areas.values():
+        for name, area in self.areas.items():
             area.on_redraw()
 
     @log_function
     def update(self):
         self.invoke_redraws_for_all_areas()
         self.screen.blit(self.surface, (self.x0, self.y0))
-        for name, area in self.areas.values():
+        for name, area in self.areas.items():
             self.screen.blit(area.surface, (area.x0, area.y0))
         pygame.display.flip()
 
