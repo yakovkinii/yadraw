@@ -16,9 +16,6 @@ dependencies = [
     'pygame',
     'yatools',
     'numpy',
-    'typing',
-    'time',
-    'logging',
     'threading'
 ]
 classifiers = [
