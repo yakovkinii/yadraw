@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "yadraw"
-version = "0.0.10"
+version = "0.0.11"
 authors = [
     { name = "Ivan I. Yakovkin", email = "yakovkinii@gmail.com" },
 ]
@@ -16,7 +16,6 @@ dependencies = [
     'pygame',
     'yatools',
     'numpy',
-    'threading'
 ]
 classifiers = [
     "Programming Language :: Python :: 3",
