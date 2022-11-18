@@ -6,7 +6,7 @@ but already implemented in YaDraw methods automatically account for shifts and s
 import pygame
 import unittest
 
-from yadraw import logging_config
+from yatools import logging_config
 import yadraw as yd
 import time
 

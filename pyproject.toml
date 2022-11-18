@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "yadraw"
-version = "0.0.7"
+version = "0.0.8"
 authors = [
     { name = "Ivan I. Yakovkin", email = "yakovkinii@gmail.com" },
 ]
@@ -14,7 +14,7 @@ requires-python = ">=3.7"
 dependencies = [
     'attrs',
     'pygame',
-    'coloredlogs',
+    'yatools',
 ]
 classifiers = [
     "Programming Language :: Python :: 3",
