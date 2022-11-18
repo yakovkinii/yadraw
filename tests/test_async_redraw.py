@@ -7,7 +7,7 @@ import time
 import unittest
 
 from yatools import logging_config
-import yadraw as yd
+import yadraw.yadraw as yd
 
 logging_config.init()
 
