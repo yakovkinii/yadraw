@@ -15,6 +15,11 @@ dependencies = [
     'attrs',
     'pygame',
     'yatools',
+    'numpy',
+    'typing',
+    'time',
+    'logging',
+    'threading'
 ]
 classifiers = [
     "Programming Language :: Python :: 3",
