@@ -7,8 +7,8 @@ import unittest
 
 import pygame
 
-from src.yadraw import logging_config
-import src.yadraw.yadraw as yd
+import logging_config
+import yadraw as yd
 
 logging_config.init()
 

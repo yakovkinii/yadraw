@@ -4,8 +4,8 @@ The key principle: avoid building the app around GUI. Make it easy to add GUI to
 """
 import unittest
 
-from src.yadraw import logging_config
-import src.yadraw.yadraw as yd
+import logging_config
+import yadraw as yd
 import time
 
 logging_config.init()
