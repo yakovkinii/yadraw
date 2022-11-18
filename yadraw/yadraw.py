@@ -63,7 +63,7 @@ class Window(Area):
     Only one window is supported.
     """
     screen: pygame.Surface = attrs.field(init=False, default=None)  # Main screen handler
-    areas: Dict[str: Area] = attrs.field(init=True, default={})
+    areas: Dict[str, Area] = attrs.field(init=True, default={})
     continue_running_main_loop: bool = attrs.field(init=False, default=False)
     main_loop_thread: Union[threading.Thread, None] = attrs.field(init=False, default=None)
     auto_update_s: float = attrs.field(init=True, default=None)
