@@ -6,8 +6,7 @@ import attrs
 from typing import Tuple, List, Union
 
 import pygame
-
-from logging_config import log_function
+from yadraw.logging_config import log_function
 
 
 @attrs.define(kw_only=True)
