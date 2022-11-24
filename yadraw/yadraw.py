@@ -42,6 +42,20 @@ class Area:
     #     pygame.draw.rect(self.surface, color=color, rect=pygame.Rect(rect), width=width)
 
     @log_function
+    def is_screen_pos_inside_area(self, pos: Union[Tuple[float, float], np.ndarray]):
+        x = pos[0]
+        y = pos[1]
+        if x < self.x0:
+            return False
+        if x > self.x0 + self.w:
+            return False
+        if y < self.y0:
+            return False
+        if y > self.y0 + self.h:
+            return False
+        return True
+
+    @log_function
     def fill(self, color: Tuple[int, int, int] = (0, 0, 0)):
         self.surface.fill(color)
 
@@ -105,6 +119,15 @@ class Window(Area):
             self.screen.blit(area.surface, (area.x0, area.y0))
         pygame.display.flip()
 
+    @log_function
+    def on_event(self, event: pygame.event):
+        if event.type == pygame.QUIT:
+            logging.info("pygame.QUIT message received")
+            self.continue_running_main_loop = False
+        for name, area in self.areas.items():
+            if True:
+                area.on_event(event)
+
     """ Main thread public methods """
 
     @log_function
@@ -142,12 +165,6 @@ class Window(Area):
         self._await_main_loop()
 
     """ GUI thread public methods """
-
-    @log_function
-    def on_event(self, event: pygame.event):
-        if event.type == pygame.QUIT:
-            logging.info("pygame.QUIT message received")
-            self.continue_running_main_loop = False
 
     """ GUI thread protected methods """
 
