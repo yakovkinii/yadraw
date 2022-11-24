@@ -114,5 +114,8 @@ window.close()
 ```
 
 ---
-Copyright &copy; 2022 [Ivan I. Yakovkin](yakovkinii.com) 
+Copyright &copy; 2022 [Ivan I. Yakovkin](https://yakovkinii.com)
+
+- [Github](https://github.com/EmixD/yadraw)
+- [PyPi](https://pypi.org/project/yadraw/)
 
