@@ -28,44 +28,102 @@ class Area:
 
     """ Any thread public methods """
 
-    @log_function
-    def circle(self, center: Union[Tuple[float, float], np.ndarray], radius: float,
-               color: Tuple[int, int, int] = (0, 0, 0)):
-        pygame.draw.circle(self.surface,
-                           color=color,
-                           center=[self.xc + self.xs * center[0], self.yc + self.ys * center[1]],
-                           radius=radius)
+    def fill(self, *args, **kwargs):
+        return self.surface.fill(*args, **kwargs)
 
-    # @log_function
-    # def rect(self, rect: Tuple[float, float, float, float], width: int = 0, color: Tuple[int, int, int] = (0, 0, 0)):
-    #     """ width=0 -> solid fill; width!=0 -> only border """
-    #     pygame.draw.rect(self.surface, color=color, rect=pygame.Rect(rect), width=width)
+    def circle(self, center: Union[Tuple[float, float], np.ndarray], **kwargs):
+        center = self._local_to_area(np.array(center))
+        return pygame.draw.circle(self.surface, center=center, **kwargs)
 
-    @log_function
+    def rect(self, rect: Union[Tuple[float, float, float, float], np.ndarray], **kwargs):
+        rect = self._local_to_area_2p(np.array(rect))
+        return pygame.draw.rect(self.surface, rect=pygame.Rect(rect), **kwargs)
+
+    def rectangle(self, *args, **kwargs):
+        return self.rect(*args, **kwargs)
+
+    def polygon(self, color, points, **kwargs):
+        points_scaled = []
+        for p in points:
+            points_scaled.append(self._local_to_area(np.array(p)))
+        return pygame.draw.polygon(self.surface, color=color, points=points, **kwargs)
+
+    def ellipse(self, color, rect, **kwargs):
+        rect = self._local_to_area_2p(np.array(rect))
+        return pygame.draw.ellipse(self.surface, color=color, rect=pygame.Rect(rect), **kwargs)
+
+    def arc(self, color, rect, start_angle, stop_angle, **kwargs):
+        if self.xs != self.ys:
+            logging.error("Arc is not implemented for x_scale != y_scale")
+        return pygame.draw.arc(self.surface, color=color, rect=pygame.Rect(self._local_to_area(np.array(rect))),
+                               start_angle=start_angle, stop_angle=stop_angle, **kwargs)
+
+    def line(self, color, start_pos, end_pos, **kwargs):
+        return pygame.draw.line(self.surface, color=color,
+                                start_pos=pygame.Vector2(*(self._local_to_area(np.array(start_pos)))),
+                                end_pos=pygame.Vector2(*(self._local_to_area(np.array(end_pos)))), **kwargs)
+
+    def lines(self, color, closed: bool, points, **kwargs):
+        points_scaled = []
+        for p in points:
+            points_scaled.append(self._local_to_area(np.array(p)))
+        return pygame.draw.lines(self.surface, color=color, closed=closed, points=points, **kwargs)
+
+    def aaline(self, color, start_pos, end_pos, **kwargs):
+        return pygame.draw.aaline(self.surface, color=color,
+                                  start_pos=pygame.Vector2(*(self._local_to_area(np.array(start_pos)))),
+                                  end_pos=pygame.Vector2(*(self._local_to_area(np.array(end_pos)))), **kwargs)
+
+    def aalines(self, color, closed: bool, points, **kwargs):
+        points_scaled = []
+        for p in points:
+            points_scaled.append(self._local_to_area(np.array(p)))
+        return pygame.draw.aalines(self.surface, color=color, closed=closed, points=points, **kwargs)
+
     def is_screen_pos_inside_area(self, pos: Union[Tuple[float, float], np.ndarray]):
         x = pos[0]
         y = pos[1]
-        if x < self.x0:
+        if (x < self.x0) or (x > self.x0 + self.w):
             return False
-        if x > self.x0 + self.w:
-            return False
-        if y < self.y0:
-            return False
-        if y > self.y0 + self.h:
+        if (y < self.y0) or (y > self.y0 + self.h):
             return False
         return True
 
-    @log_function
-    def fill(self, color: Tuple[int, int, int] = (0, 0, 0)):
-        self.surface.fill(color)
+    def _r0(self):
+        return np.array([self.x0, self.y0])
+
+    def _rc(self):
+        return np.array([self.xc, self.yc])
+
+    def _rs(self):
+        return np.array([self.xs, self.ys])
+
+    @staticmethod
+    def _p_to_2p(arr: np.ndarray):
+        return np.concatenate([arr, arr])
+
+    def _local_to_area(self, point: np.ndarray):
+        return self._rc() + self._rs() * point
+
+    def _screen_to_local(self, point: np.ndarray):
+        return (point - self._rc() - self._r0()) / self._rs()
+
+    def _local_to_area_2p(self, point_2p: np.ndarray):
+        return self._p_to_2p(self._rc()) + self._p_to_2p(self._rs()) * point_2p
+
+    @staticmethod
+    def p_to_list(point):
+        return [point[0], point[1]]
+
+    @staticmethod
+    def p_to_list_2p(point):
+        return [point[0], point[1], point[2], point[3]]
 
     """ GUI thread public methods """
 
-    @log_function
     def on_event(self, event: pygame.event):
         ...
 
-    @log_function
     def on_redraw(self):
         ...
 
@@ -105,13 +163,11 @@ class Window(Area):
         else:
             self.areas[name] = Area(x0, y0, w, h, xc, yc, xs, ys)
 
-    @log_function
     def invoke_redraws_for_all_areas(self):
         self.on_redraw()
         for name, area in self.areas.items():
             area.on_redraw()
 
-    @log_function
     def update(self):
         self.invoke_redraws_for_all_areas()
         self.screen.blit(self.surface, (self.x0, self.y0))
@@ -119,7 +175,6 @@ class Window(Area):
             self.screen.blit(area.surface, (area.x0, area.y0))
         pygame.display.flip()
 
-    @log_function
     def on_event(self, event: pygame.event):
         if event.type == pygame.QUIT:
             logging.info("pygame.QUIT message received")
