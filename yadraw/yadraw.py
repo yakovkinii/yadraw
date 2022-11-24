@@ -150,7 +150,7 @@ class Window(Area):
         logging.info('Started gui thread')
         logging.debug('Main thread: waiting for gui to initialize')
         while not self.gui_initialized:
-            pass
+            time.sleep(0.1)  # To avoid GIL
         logging.debug('Main thread: continue')
 
     @log_function
