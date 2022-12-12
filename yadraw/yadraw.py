@@ -114,12 +114,11 @@ class Area:
         return (point - self._rc() - self._r0()) / self._rs()
 
     def _local_to_area_2p(self, point_2p: np.ndarray):
-        return np.concatenate(
-            [
-                self._rc() + point_2p[0:2] * self._rs(),
-                point_2p[2:4] * self._rs()
-            ]
-        )
+        p1 = self._rc() + point_2p[0:2] * self._rs()
+        p2 = point_2p[2:4] * self._rs()
+        p1 = p1 - p2 * (np.sign(p2) - 1) / 2
+        p2 = np.abs(p2)
+        return np.concatenate([p1, p2])
 
     @staticmethod
     def p_to_list(point):
