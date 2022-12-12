@@ -36,6 +36,11 @@ class Area:
         return pygame.draw.circle(self.surface, center=center, **kwargs)
 
     def rect(self, rect: Union[Tuple[float, float, float, float], np.ndarray], **kwargs):
+        """
+        :param rect:
+        :param kwargs:
+        :return:
+        """
         rect = self._local_to_area_2p(np.array(rect))
         return pygame.draw.rect(self.surface, rect=pygame.Rect(rect), **kwargs)
 
@@ -109,7 +114,12 @@ class Area:
         return (point - self._rc() - self._r0()) / self._rs()
 
     def _local_to_area_2p(self, point_2p: np.ndarray):
-        return self._p_to_2p(self._rc()) + self._p_to_2p(self._rs()) * point_2p
+        return np.concatenate(
+            [
+                self._rc() + point_2p[0:2] * self._rs(),
+                point_2p[2:4] * self._rs()
+            ]
+        )
 
     @staticmethod
     def p_to_list(point):
